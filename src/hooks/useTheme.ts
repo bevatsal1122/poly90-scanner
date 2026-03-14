@@ -5,11 +5,11 @@ import { useState, useEffect, useCallback } from 'react';
 export type Theme = 'light' | 'dark';
 
 export function useTheme() {
-  const [theme, setThemeState] = useState<Theme>('light');
+  const [theme, setThemeState] = useState<Theme>('dark');
 
   useEffect(() => {
     const stored = localStorage.getItem('theme') as Theme | null;
-    const initial = stored || 'light';
+    const initial = stored || 'dark';
     setThemeState(initial);
     document.documentElement.classList.toggle('dark', initial === 'dark');
   }, []);

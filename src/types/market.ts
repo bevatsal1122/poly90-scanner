@@ -22,6 +22,8 @@ export interface Market {
   closed: boolean;
   description?: string;
   image?: string;
+  priceChange?: number;
+  priceHistory?: number[];
 }
 
 export type TimeFilter =
@@ -49,7 +51,7 @@ export type SortField =
 export type SortDirection = 'asc' | 'desc';
 
 export interface Filters {
-  category: string;
+  tag: string;
   timeFilter: TimeFilter;
   probabilityFilter: ProbabilityFilter;
   minLiquidity: number;

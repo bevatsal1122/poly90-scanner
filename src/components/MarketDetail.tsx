@@ -1,11 +1,13 @@
 'use client';
 
-import { X, ExternalLink, Clock, Droplets, BarChart3, TrendingUp } from 'lucide-react';
+import { X, ExternalLink, Clock, Droplets, BarChart3, TrendingUp, Star } from 'lucide-react';
 import type { Market } from '@/types/market';
 
 interface MarketDetailProps {
   market: Market;
   onClose: () => void;
+  isFavorite: boolean;
+  onToggleFavorite: () => void;
 }
 
 function formatLiquidity(n: number): string {
@@ -14,14 +16,19 @@ function formatLiquidity(n: number): string {
   return `$${n.toFixed(0)}`;
 }
 
-export default function MarketDetail({ market, onClose }: MarketDetailProps) {
+export default function MarketDetail({
+  market,
+  onClose,
+  isFavorite,
+  onToggleFavorite,
+}: MarketDetailProps) {
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 dark:bg-black/50 backdrop-blur-sm animate-fade-in"
       onClick={onClose}
     >
       <div
-        className="bg-terminal-panel dark:bg-[#111] border border-terminal-border rounded-xl shadow-xl w-full max-w-2xl mx-4 animate-slide-up"
+        className="bg-terminal-panel dark:bg-[#111] border border-terminal-border rounded-xl shadow-xl w-full max-w-2xl mx-4 animate-slide-up max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -36,16 +43,32 @@ export default function MarketDetail({ market, onClose }: MarketDetailProps) {
               {market.question}
             </h2>
           </div>
-          <button
-            onClick={onClose}
-            className="p-1 text-terminal-muted dark:text-gray-400 hover:text-terminal-text dark:hover:text-white transition-colors"
-          >
-            <X className="w-4 h-4" />
-          </button>
+          <div className="flex items-center gap-1">
+            <button
+              onClick={onToggleFavorite}
+              className={`p-1.5 transition-colors cursor-pointer ${
+                isFavorite
+                  ? 'text-yellow-500'
+                  : 'text-terminal-muted dark:text-gray-400 hover:text-yellow-500'
+              }`}
+              title={isFavorite ? 'Remove from watchlist' : 'Add to watchlist'}
+            >
+              <Star
+                className="w-4 h-4"
+                fill={isFavorite ? 'currentColor' : 'none'}
+              />
+            </button>
+            <button
+              onClick={onClose}
+              className="p-1 text-terminal-muted dark:text-gray-400 hover:text-terminal-text dark:hover:text-white transition-colors cursor-pointer"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-4 gap-px bg-terminal-border/30 border-b border-terminal-border">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-px bg-terminal-border/30 border-b border-terminal-border">
           <div className="bg-terminal-panel dark:bg-[#111] px-4 py-3">
             <div className="text-[10px] text-terminal-muted dark:text-gray-400 uppercase tracking-wider mb-1">
               Predicted Outcome
@@ -93,7 +116,9 @@ export default function MarketDetail({ market, onClose }: MarketDetailProps) {
                   key={outcome.name}
                   className="flex items-center justify-between bg-terminal-bg dark:bg-white/5 rounded-lg px-3 py-2"
                 >
-                  <span className="text-xs text-terminal-text dark:text-gray-200">{outcome.name}</span>
+                  <span className="text-xs text-terminal-text dark:text-gray-200">
+                    {outcome.name}
+                  </span>
                   <div className="flex items-center gap-3">
                     <div className="w-24 h-1.5 bg-terminal-border/30 dark:bg-white/10 rounded-full overflow-hidden">
                       <div
@@ -125,7 +150,9 @@ export default function MarketDetail({ market, onClose }: MarketDetailProps) {
             <div className="flex items-center gap-2 bg-terminal-bg dark:bg-white/5 rounded-lg px-3 py-2">
               <Droplets className="w-3.5 h-3.5 text-signal-blue" />
               <div>
-                <div className="text-[10px] text-terminal-muted dark:text-gray-400">Liquidity</div>
+                <div className="text-[10px] text-terminal-muted dark:text-gray-400">
+                  Liquidity
+                </div>
                 <div className="text-xs text-terminal-text dark:text-gray-200 tabular-nums">
                   {formatLiquidity(market.liquidity)}
                 </div>
@@ -134,7 +161,9 @@ export default function MarketDetail({ market, onClose }: MarketDetailProps) {
             <div className="flex items-center gap-2 bg-terminal-bg dark:bg-white/5 rounded-lg px-3 py-2">
               <BarChart3 className="w-3.5 h-3.5 text-signal-cyan" />
               <div>
-                <div className="text-[10px] text-terminal-muted dark:text-gray-400">Volume</div>
+                <div className="text-[10px] text-terminal-muted dark:text-gray-400">
+                  Volume
+                </div>
                 <div className="text-xs text-terminal-text dark:text-gray-200 tabular-nums">
                   {formatLiquidity(market.volume)}
                 </div>
@@ -143,7 +172,9 @@ export default function MarketDetail({ market, onClose }: MarketDetailProps) {
             <div className="flex items-center gap-2 bg-terminal-bg dark:bg-white/5 rounded-lg px-3 py-2">
               <Clock className="w-3.5 h-3.5 text-signal-yellow" />
               <div>
-                <div className="text-[10px] text-terminal-muted dark:text-gray-400">End Date</div>
+                <div className="text-[10px] text-terminal-muted dark:text-gray-400">
+                  End Date
+                </div>
                 <div className="text-xs text-terminal-text dark:text-gray-200">
                   {market.endDate
                     ? new Date(market.endDate).toLocaleDateString()
@@ -172,7 +203,7 @@ export default function MarketDetail({ market, onClose }: MarketDetailProps) {
             href={market.polymarketUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center justify-center gap-2 w-full bg-signal-green/10 hover:bg-signal-green/20 border border-signal-green/30 text-signal-green rounded-lg px-4 py-2.5 text-xs font-semibold transition-colors"
+            className="flex items-center justify-center gap-2 w-full bg-signal-green/10 hover:bg-signal-green/20 border border-signal-green/30 text-signal-green rounded-lg px-4 py-2.5 text-xs font-semibold transition-colors cursor-pointer"
           >
             <ExternalLink className="w-3.5 h-3.5" />
             Trade on Polymarket

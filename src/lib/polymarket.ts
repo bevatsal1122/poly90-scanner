@@ -76,7 +76,7 @@ export function parseOutcomes(market: GammaMarket): { name: string; price: numbe
 
     return names.map((name, i) => ({
       name,
-      price: prices[i] ?? 0,
+      price: typeof prices[i] === 'string' ? parseFloat(prices[i]) : (prices[i] ?? 0),
     }));
   } catch {
     return [];

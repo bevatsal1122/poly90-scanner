@@ -3,7 +3,8 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import type { Market, Filters, ScannerStats } from '@/types/market';
 
-const POLL_INTERVAL = 10000;
+const POLL_INTERVAL = 3000;
+const MAX_HISTORY_POINTS = 30;
 
 const TIME_FILTER_MS: Record<string, number> = {
   '10m': 10 * 60 * 1000,
@@ -20,21 +21,43 @@ const PROB_RANGES: Record<string, [number, number]> = {
   '98-100': [0.98, 1.0],
 };
 
-export function useMarkets(filters: Filters) {
+export function useMarkets(filters: Filters, favorites: Set<string>) {
   const [allMarkets, setAllMarkets] = useState<Market[]>([]);
-  const [categories, setCategories] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<number>(0);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const prevPricesRef = useRef<Map<string, number>>(new Map());
+  const priceHistoryRef = useRef<Map<string, number[]>>(new Map());
+  const priceChangesRef = useRef<Map<string, number>>(new Map());
 
   const fetchData = useCallback(async () => {
     try {
       const res = await fetch('/api/markets', { cache: 'no-store' });
       if (!res.ok) throw new Error('Failed to fetch');
       const data = await res.json();
-      setAllMarkets(data.markets);
-      setCategories(data.categories);
+
+      const markets: Market[] = data.markets;
+      const prevPrices = prevPricesRef.current;
+      const history = priceHistoryRef.current;
+      const changes = priceChangesRef.current;
+
+      for (const m of markets) {
+        // Price change
+        const prev = prevPrices.get(m.id);
+        if (prev !== undefined) {
+          changes.set(m.id, m.bestPrice - prev);
+        }
+        prevPrices.set(m.id, m.bestPrice);
+
+        // Price history
+        const h = history.get(m.id) || [];
+        h.push(m.bestPrice);
+        if (h.length > MAX_HISTORY_POINTS) h.shift();
+        history.set(m.id, h);
+      }
+
+      setAllMarkets(markets);
       setLastUpdated(data.timestamp);
       setError(null);
     } catch (err) {
@@ -52,13 +75,15 @@ export function useMarkets(filters: Filters) {
     };
   }, [fetchData]);
 
-  // Apply filters
-  const filteredMarkets = allMarkets.filter((market) => {
-    // Category filter
-    if (filters.category !== 'all' && market.category !== filters.category) {
-      return false;
-    }
+  // Enrich markets with price data
+  const enrichedMarkets = allMarkets.map((m) => ({
+    ...m,
+    priceChange: priceChangesRef.current.get(m.id) || 0,
+    priceHistory: priceHistoryRef.current.get(m.id) || [m.bestPrice],
+  }));
 
+  // Apply filters
+  const filteredMarkets = enrichedMarkets.filter((market) => {
     // Time filter
     if (filters.timeFilter !== 'all') {
       const maxMs = TIME_FILTER_MS[filters.timeFilter];
@@ -71,6 +96,18 @@ export function useMarkets(filters: Filters) {
       if (range) {
         const [min, max] = range;
         if (market.bestPrice < min || market.bestPrice > max) return false;
+      }
+    }
+
+    // Tag filter
+    if (filters.tag) {
+      if (filters.tag === '__watchlist__') {
+        if (!favorites.has(market.id)) return false;
+      } else {
+        const keywords = filters.tag.toLowerCase().split(/\s+/);
+        const haystack =
+          `${market.question} ${market.bestOutcome} ${market.category} ${market.description || ''}`.toLowerCase();
+        if (!keywords.some((kw) => haystack.includes(kw))) return false;
       }
     }
 
@@ -119,15 +156,13 @@ export function useMarkets(filters: Filters) {
         ? allMarkets.reduce((sum, m) => sum + m.bestPrice, 0) / allMarkets.length
         : 0,
     totalLiquidity: allMarkets.reduce((sum, m) => sum + m.liquidity, 0),
-    resolvingSoon: allMarkets.filter(
-      (m) => m.timeRemaining <= 60 * 60 * 1000
-    ).length,
+    resolvingSoon: allMarkets.filter((m) => m.timeRemaining <= 60 * 60 * 1000)
+      .length,
   };
 
   return {
     markets: sortedMarkets,
-    allMarkets,
-    categories,
+    allMarkets: enrichedMarkets,
     loading,
     error,
     lastUpdated,
