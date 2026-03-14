@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import type { Market, Filters, ScannerStats } from '@/types/market';
 
-const POLL_INTERVAL = 3000;
+const POLL_INTERVAL = 6000;
 const MAX_HISTORY_POINTS = 30;
 
 const TIME_FILTER_MS: Record<string, number> = {
