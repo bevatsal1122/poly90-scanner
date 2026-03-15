@@ -105,10 +105,10 @@ export default function MarketTable({
             <div
               key={market.id}
               onClick={() => onSelectMarket(market)}
-              className="bg-terminal-panel dark:bg-[#111] border border-terminal-border px-5 pt-4 pb-2.5 cursor-pointer hover:bg-terminal-bg/60 dark:hover:bg-white/5 transition-all"
+              className="bg-terminal-panel dark:bg-[#111] border border-terminal-border px-5 py-4 cursor-pointer hover:bg-terminal-bg/60 dark:hover:bg-white/5 transition-all"
             >
               {/* Top: Image + Question + Star + Link */}
-              <div className="flex items-start gap-2.5 mb-2">
+              <div className="flex items-start gap-2.5 mb-3">
                 {market.image ? (
                   <img
                     src={market.image}
@@ -157,37 +157,30 @@ export default function MarketTable({
                 </div>
               </div>
 
-              {/* Outcome badge + Price change */}
-              <div className="flex items-center gap-2 mb-2">
-                <span className="inline-block text-[13px] font-semibold px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/30">
-                  {market.bestOutcome}
-                </span>
-                {priceChange !== 0 && (
-                  <span
-                    className={`flex items-center gap-0.5 text-[11px] font-medium tabular-nums ${
-                      priceChange > 0
-                        ? 'text-signal-green'
-                        : 'text-signal-red'
-                    }`}
-                  >
-                    {priceChange > 0 ? (
-                      <ArrowUp className="w-3 h-3" />
-                    ) : (
-                      <ArrowDown className="w-3 h-3" />
-                    )}
-                    {Math.abs(priceChange * 100).toFixed(1)}%
-                  </span>
-                )}
-              </div>
-
               {/* Probability split bar */}
-              <div className="mb-2">
-                <div className="flex items-end gap-0.5 mb-0.5">
+              <div className="my-4">
+                <div className="flex items-end gap-0.5 mb-2">
                   <span className={`text-[15px] font-bold tabular-nums leading-none ${getProbColor(market.bestPrice)}`}>
-                    Yes {(market.bestPrice * 100).toFixed(1)}%
+                    {market.bestOutcome} {(market.bestPrice * 100).toFixed(1)}%
                   </span>
+                  {priceChange !== 0 && (
+                    <span
+                      className={`flex items-center gap-0.5 text-[11px] font-medium tabular-nums leading-none ml-1 ${
+                        priceChange > 0
+                          ? 'text-signal-green'
+                          : 'text-signal-red'
+                      }`}
+                    >
+                      {priceChange > 0 ? (
+                        <ArrowUp className="w-3 h-3" />
+                      ) : (
+                        <ArrowDown className="w-3 h-3" />
+                      )}
+                      {Math.abs(priceChange * 100).toFixed(1)}%
+                    </span>
+                  )}
                   <span className="text-[11px] font-bold text-signal-red/70 tabular-nums leading-none ml-auto">
-                    No {((1 - market.bestPrice) * 100).toFixed(1)}%
+                    {((1 - market.bestPrice) * 100).toFixed(1)}%
                   </span>
                 </div>
                 <div className="flex w-full h-2.5">

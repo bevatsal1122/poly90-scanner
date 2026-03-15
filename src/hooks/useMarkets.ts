@@ -102,7 +102,7 @@ export function useMarkets(filters: Filters, favorites: Set<string>) {
     // Tag filter
     if (filters.tag) {
       if (filters.tag === '__watchlist__') {
-        if (!favorites.has(market.id)) return false;
+        if (!favorites || favorites.size === 0 || !favorites.has(market.id)) return false;
       } else {
         const keywords = filters.tag.toLowerCase().split(/\s+/);
         const haystack =
